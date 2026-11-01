@@ -1,1 +1,38 @@
-# Факты прогона, посчитанные метрики, сравнение с API 
+{
+  "run": {
+    "model": "Qwen/Qwen2.5-1.5B-Instruct",
+    "concurrency": 32,
+    "params": {
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "top_k": 20,
+      "repetition_penalty": 1.2,
+      "max_tokens": 500
+    },
+    "elapsed_sec": 123.0,
+    "input_tokens": 146091,
+    "n": 300,
+    "avg_latency": 12.37,
+    "avg_attempts": 1.0
+  },
+  "metrics": {
+    "valid": 279,
+    "valid_rate": 0.93,
+    "throughput": 2.4390243902439024,
+    "time_for_300_sec": 123.0,
+    "cost_vllm_per_1000": 7.402777777777777,
+    "errors_by_reason": {
+      "Не JSON": 1,
+      "предложений": 20
+    }
+  },
+  "api_comparison": {
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "n": 20,
+    "valid_rate": 1.0,
+    "input_tokens": 9716,
+    "output_tokens": 6161,
+    "elapsed_sec": 72.09394880011678,
+    "cost_per_1000": 28.199
+  }
+}

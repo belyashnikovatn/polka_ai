@@ -53,6 +53,7 @@ MAX_FIXES = 2
 INPUT_RUB_PER_MILLION = 20
 OUTPUT_RUB_PER_MILLION = 60
 REPORT_PATH = Path("outputs/report.json")
+API_REPORT_PATH = Path("outputs/api_report.json")
 API_OUTPUT_PATH = Path("outputs/api_dev.jsonl")
 
 # Локальный прогон тех же 20 карточек dev.jsonl, выбранный набор параметров.
@@ -573,7 +574,46 @@ def main() -> None:
             if result["card"] is not None:
                 sink.write(json.dumps(result["card"], ensure_ascii=False) + "\n")
 
-    report = {
+    write_reports(local, remote, results)
+    logger.info("Подробный прогон: %s", API_REPORT_PATH)
+    logger.info("В %s обновлён только api_comparison", REPORT_PATH)
+
+
+def api_comparison_block(model: str, results: list[dict]) -> dict:
+    """Секция сводного отчёта. Токены — суммы usage, время — сумма задержек."""
+    prompts = [row["prompt_tokens"] for row in results if row["prompt_tokens"] is not None]
+    completions = [
+        row["completion_tokens"] for row in results if row["completion_tokens"] is not None
+    ]
+    latencies = [row["latency_seconds"] for row in results if row["latency_seconds"] is not None]
+    total = len(results)
+    valid = sum(row["valid"] for row in results)
+    input_tokens = int(sum(prompts))
+    output_tokens = int(sum(completions))
+    cost = (
+        input_tokens * INPUT_RUB_PER_MILLION + output_tokens * OUTPUT_RUB_PER_MILLION
+    ) / 1_000_000 / total * 1000
+    return {
+        "model": model,
+        "n": total,
+        "valid_rate": valid / total if total else 0.0,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "elapsed_sec": sum(latencies),
+        "cost_per_1000": cost,
+    }
+
+
+def write_reports(
+    local: dict,
+    remote: dict,
+    results: list[dict],
+    report_path: Path = REPORT_PATH,
+    api_report_path: Path = API_REPORT_PATH,
+) -> None:
+    """Полный прогон API — в api_report.json. В report.json меняется только api_comparison."""
+    api_report_path.parent.mkdir(parents=True, exist_ok=True)
+    detailed = {
         "price_rub_per_million": {
             "input": INPUT_RUB_PER_MILLION,
             "output": OUTPUT_RUB_PER_MILLION,
@@ -585,8 +625,21 @@ def main() -> None:
             for result in results
         ],
     }
-    REPORT_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    logger.info("Отчёт: %s", REPORT_PATH)
+    api_report_path.write_text(
+        json.dumps(detailed, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    summary: dict = {}
+    if report_path.exists():
+        loaded = json.loads(report_path.read_text(encoding="utf-8"))
+        if isinstance(loaded, dict):
+            summary = loaded
+    summary["api_comparison"] = api_comparison_block(remote["model"], results)
+    report_path.write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

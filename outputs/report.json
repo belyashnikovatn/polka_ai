@@ -9,21 +9,21 @@
       "repetition_penalty": 1.2,
       "max_tokens": 500
     },
-    "elapsed_sec": 123.0,
+    "elapsed_sec": 140.3,
     "input_tokens": 146091,
     "n": 300,
-    "avg_latency": 12.37,
+    "avg_latency": 14.16,
     "avg_attempts": 1.0
   },
   "metrics": {
-    "valid": 279,
-    "valid_rate": 0.93,
-    "throughput": 2.4390243902439024,
-    "time_for_300_sec": 123.0,
-    "cost_vllm_per_1000": 7.402777777777777,
+    "valid": 278,
+    "valid_rate": 0.9266666666666666,
+    "throughput": 2.1382751247327154,
+    "time_for_300_sec": 140.3,
+    "cost_vllm_per_1000": 8.443981481481483,
     "errors_by_reason": {
       "Не JSON": 1,
-      "предложений": 20
+      "предложений": 21
     }
   },
   "api_comparison": {
